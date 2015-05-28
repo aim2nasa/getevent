@@ -123,11 +123,6 @@ static int scan_dir(const char *dirname, int print_flags)
     return 0;
 }
 
-static void usage(int argc, char *argv[])
-{
-    fprintf(stderr, "Usage: %s [-t] [-n] [-s switchmask] [-S] [-v [mask]] [-q] [-c count] [-r] [device]\n", argv[0]);
-}
-
 int main(int argc, char *argv[])
 {
     int c;
@@ -193,7 +188,6 @@ int main(int argc, char *argv[])
             fprintf(stderr, "%s: invalid option -%c\n",
                 argv[0], optopt);
         case 'h':
-            usage(argc, argv);
             exit(1);
         }
     } while (1);
