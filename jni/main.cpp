@@ -419,6 +419,7 @@ int main(int argc, char *argv[])
     if(dont_block)
         return 0;
 
+    printf("entering while loop...\n");
     while(1) {
         pollres = poll(ufds, nfds, -1);
         printf("poll %d, returned %d\n", nfds, pollres);
