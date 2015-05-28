@@ -144,54 +144,6 @@ int main(int argc, char *argv[])
     const char *device = NULL;
     const char *device_path = "/dev/input";
 
-    opterr = 0;
-    do {
-        c = getopt(argc, argv, "tns:Sv::qc:rh");
-        if (c == EOF)
-            break;
-        switch (c) {
-        case 't':
-            get_time = 1;
-            break;
-        case 'n':
-            newline = "";
-            break;
-        case 's':
-            get_switch = strtoul(optarg, NULL, 0);
-            if(dont_block == -1)
-                dont_block = 1;
-            break;
-        case 'S':
-            get_switch = ~0;
-            if(dont_block == -1)
-                dont_block = 1;
-            break;
-        case 'v':
-            if(optarg)
-                print_flags =  strtoul(optarg, NULL, 0);
-            else
-                print_flags |= PRINT_DEVICE | PRINT_DEVICE_NAME | PRINT_DEVICE_INFO | PRINT_VERSION;
-            print_flags_set = 1;
-            break;
-        case 'q':
-            print_flags = 0;
-            print_flags_set = 1;
-            break;
-        case 'c':
-            event_count = atoi(optarg);
-            dont_block = 0;
-            break;
-        case 'r':
-            sync_rate = 1;
-            break;
-        case '?':
-            fprintf(stderr, "%s: invalid option -%c\n",
-                argv[0], optopt);
-        case 'h':
-            exit(1);
-        }
-    } while (1);
-
     nfds = 1;
     ufds = (pollfd*)calloc(1, sizeof(ufds[0]));
     ufds[0].fd = inotify_init();
