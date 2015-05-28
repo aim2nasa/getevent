@@ -28,7 +28,6 @@ static int open_device(const char *device, int print_flags)
 {
     printf("open_device start %s,%d\n",device,print_flags);
 
-    int version;
     int fd;
     struct pollfd *new_ufds;
     char **new_device_names;
@@ -44,42 +43,6 @@ static int open_device(const char *device, int print_flags)
         return -1;
     }
     printf("%s opened\n",device);
-    
-    if(ioctl(fd, EVIOCGVERSION, &version)) {
-        if(print_flags & PRINT_DEVICE_ERRORS)
-            fprintf(stderr, "could not get driver version for %s, %s\n", device, strerror(errno));
-        return -1;
-    }
-    printf("EVIOCGVERSION version:%d\n",version);
-
-    if(ioctl(fd, EVIOCGID, &id)) {
-        if(print_flags & PRINT_DEVICE_ERRORS)
-            fprintf(stderr, "could not get driver id for %s, %s\n", device, strerror(errno));
-        return -1;
-    }
-    printf("EVIOCGID id bustype:%d vendor:%d product:%d version:%d\n",id.bustype,id.vendor,id.product,id.version);
-
-    name[sizeof(name) - 1] = '\0';
-    location[sizeof(location) - 1] = '\0';
-    idstr[sizeof(idstr) - 1] = '\0';
-    if(ioctl(fd, EVIOCGNAME(sizeof(name) - 1), &name) < 1) {
-        //fprintf(stderr, "could not get device name for %s, %s\n", device, strerror(errno));
-        name[0] = '\0';
-    }
-    printf("EVIOCGNAME name:%s\n",name);
-
-
-    if(ioctl(fd, EVIOCGPHYS(sizeof(location) - 1), &location) < 1) {
-        //fprintf(stderr, "could not get location for %s, %s\n", device, strerror(errno));
-        location[0] = '\0';
-    }
-    printf("EVIOCGPHYS location:%s\n",location);
-
-    if(ioctl(fd, EVIOCGUNIQ(sizeof(idstr) - 1), &idstr) < 1) {
-        //fprintf(stderr, "could not get idstring for %s, %s\n", device, strerror(errno));
-        idstr[0] = '\0';
-    }
-    printf("EVIOCGUNIQ idstr:%s\n",idstr);
 
     new_ufds = (pollfd*)realloc(ufds, sizeof(ufds[0]) * (nfds + 1));
     if(new_ufds == NULL) {
@@ -96,18 +59,6 @@ static int open_device(const char *device, int print_flags)
     }
     device_names = new_device_names;
     printf("mem alloc for dev names(sizeof(device_names[0]):%d x %d)\n",sizeof(device_names[0]),nfds+1);
-
-    printf("add device %d: %s\n", nfds, device);
-    printf("  bus:      %04x\n"
-               "  vendor    %04x\n"
-               "  product   %04x\n"
-               "  version   %04x\n",
-               id.bustype, id.vendor, id.product, id.version);
-    printf("  name:     \"%s\"\n", name);
-    printf("  location: \"%s\"\n"
-               "  id:       \"%s\"\n", location, idstr);
-    printf("  version:  %d.%d.%d\n",
-               version >> 16, (version >> 8) & 0xff, version & 0xff);
 
     ufds[nfds].fd = fd;
     ufds[nfds].events = POLLIN;
