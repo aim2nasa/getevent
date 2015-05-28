@@ -378,6 +378,7 @@ int main(int argc, char *argv[])
     ufds[0].fd = inotify_init();
     ufds[0].events = POLLIN;
     if(device) {
+        printf("device is %s\n",device);
         if(!print_flags_set)
             print_flags = PRINT_DEVICE_ERRORS;
         res = open_device(device, print_flags);
@@ -386,12 +387,14 @@ int main(int argc, char *argv[])
         }
     }
     else {
+        printf("device is NULL, add watch %s\n",device_path);
         print_device = 1;
-		res = inotify_add_watch(ufds[0].fd, device_path, IN_DELETE | IN_CREATE);
+	res = inotify_add_watch(ufds[0].fd, device_path, IN_DELETE | IN_CREATE);
         if(res < 0) {
             fprintf(stderr, "could not add watch for %s, %s\n", device_path, strerror(errno));
             return 1;
         }
+        printf("scanning dir %s\n",device_path);
         res = scan_dir(device_path, print_flags);
         if(res < 0) {
             fprintf(stderr, "scan dir failed for %s\n", device_path);
@@ -400,6 +403,7 @@ int main(int argc, char *argv[])
     }
 
     if(get_switch) {
+        printf("get_switch\n",device_path);
         for(i = 1; i < nfds; i++) {
             uint16_t sw;
             res = ioctl(ufds[i].fd, EVIOCGSW(1), &sw);
@@ -417,18 +421,23 @@ int main(int argc, char *argv[])
 
     while(1) {
         pollres = poll(ufds, nfds, -1);
-        //printf("poll %d, returned %d\n", nfds, pollres);
+        printf("poll %d, returned %d\n", nfds, pollres);
         if(ufds[0].revents & POLLIN) {
+            printf("before read_notify %s ufds[0].fd:%d\n",device_path,ufds[0].fd);
             read_notify(device_path, ufds[0].fd, print_flags);
+            printf("after read_notify %s ufds[0].fd:%d\n",device_path,ufds[0].fd);
         }
         for(i = 1; i < nfds; i++) {
             if(ufds[i].revents) {
                 if(ufds[i].revents & POLLIN) {
+		    printf("ufds[%d].revents=%d, POLLIN\n",i,ufds[i].revents);
                     res = read(ufds[i].fd, &event, sizeof(event));
                     if(res < (int)sizeof(event)) {
                         fprintf(stderr, "could not get event\n");
                         return 1;
                     }
+		    printf("read %d bytes ",res);
+
                     if(get_time) {
                         printf("%ld-%ld: ", event.time.tv_sec, event.time.tv_usec);
                     }
