@@ -24,72 +24,6 @@ enum {
     PRINT_POSSIBLE_EVENTS   = 1U << 5,
 };
 
-static int print_possible_events(int fd)
-{
-    uint8_t *bits = NULL;
-    ssize_t bits_size = 0;
-    int i, j, k;
-    int res, res2;
-    
-    printf("  events:\n");
-    for(i = 0; i <= EV_MAX; i++) {
-        int count = 0;
-        while(1) {
-            res = ioctl(fd, EVIOCGBIT(i, bits_size), bits);
-            if(res < bits_size)
-                break;
-            bits_size = res + 16;
-            bits = (uint8_t*)realloc(bits, bits_size * 2);
-            if(bits == NULL) {
-                fprintf(stderr, "failed to allocate buffer of size %d\n", bits_size);
-                return 1;
-            }
-        }
-        switch(i) {
-            case EV_KEY:
-                res2 = ioctl(fd, EVIOCGKEY(res), bits + bits_size);
-                break;
-            case EV_LED:
-                res2 = ioctl(fd, EVIOCGLED(res), bits + bits_size);
-                break;
-            case EV_SND:
-                res2 = ioctl(fd, EVIOCGSND(res), bits + bits_size);
-                break;
-            case EV_SW:
-                res2 = ioctl(fd, EVIOCGSW(bits_size), bits + bits_size);
-                break;
-            default:
-                res2 = 0;
-        }
-        for(j = 0; j < res; j++) {
-            for(k = 0; k < 8; k++)
-                if(bits[j] & 1 << k) {
-                    char down;
-                    if(j < res2 && (bits[j + bits_size] & 1 << k))
-                        down = '*';
-                    else
-                        down = ' ';
-                    if(count == 0)
-                        printf("    type %04x:", i);
-                    else if((count & 0x7) == 0 || i == EV_ABS)
-                        printf("\n              ");
-                    printf(" %04x%c", j * 8 + k, down);
-                    if(i == EV_ABS) {
-                        struct input_absinfo abs;
-                        if(ioctl(fd, EVIOCGABS(j * 8 + k), &abs) == 0) {
-                            printf(" value %d, min %d, max %d, fuzz %d flat %d", abs.value, abs.minimum, abs.maximum, abs.fuzz, abs.flat);
-                        }
-                    }
-                    count++;
-                }
-        }
-        if(count)
-            printf("\n");
-    }
-    free(bits);
-    return 0;
-}
-
 static int open_device(const char *device, int print_flags)
 {
     printf("open_device start %s,%d\n",device,print_flags);
@@ -174,8 +108,6 @@ static int open_device(const char *device, int print_flags)
                "  id:       \"%s\"\n", location, idstr);
     printf("  version:  %d.%d.%d\n",
                version >> 16, (version >> 8) & 0xff, version & 0xff);
-
-    //print_possible_events(fd);
 
     ufds[nfds].fd = fd;
     ufds[nfds].events = POLLIN;
