@@ -24,9 +24,9 @@ enum {
     PRINT_POSSIBLE_EVENTS   = 1U << 5,
 };
 
-static int open_device(const char *device, int print_flags)
+static int open_device(const char *device)
 {
-    printf("open_device start %s,%d\n",device,print_flags);
+    printf("open_device start %s\n",device);
 
     int fd;
     struct pollfd *new_ufds;
@@ -34,8 +34,7 @@ static int open_device(const char *device, int print_flags)
 
     fd = open(device, O_RDWR);
     if(fd < 0) {
-        if(print_flags & PRINT_DEVICE_ERRORS)
-            fprintf(stderr, "could not open %s, %s\n", device, strerror(errno));
+        fprintf(stderr, "could not open %s, %s\n", device, strerror(errno));
         return -1;
     }
     printf("%s opened\n",device);
@@ -64,14 +63,13 @@ static int open_device(const char *device, int print_flags)
     return 0;
 }
 
-int close_device(const char *device, int print_flags)
+int close_device(const char *device)
 {
     int i;
     for(i = 1; i < nfds; i++) {
         if(strcmp(device_names[i], device) == 0) {
             int count = nfds - i - 1;
-            if(print_flags & PRINT_DEVICE)
-                printf("remove device %d: %s\n", i, device);
+            printf("remove device %d: %s\n", i, device);
             free(device_names[i]);
             memmove(device_names + i, device_names + i + 1, sizeof(device_names[0]) * count);
             memmove(ufds + i, ufds + i + 1, sizeof(ufds[0]) * count);
@@ -79,19 +77,18 @@ int close_device(const char *device, int print_flags)
             return 0;
         }
     }
-    if(print_flags & PRINT_DEVICE_ERRORS)
-        fprintf(stderr, "remote device: %s not found\n", device);
+    fprintf(stderr, "remote device: %s not found\n", device);
     return -1;
 }
 
-static int scan_dir(const char *dirname, int print_flags)
+static int scan_dir(const char *dirname)
 {
     char devname[PATH_MAX];
     char *filename;
     DIR *dir;
     struct dirent *de;
 
-    printf("scan_dir start %s,%d\n",dirname,print_flags);
+    printf("scan_dir start %s,%d\n",dirname);
 
     printf("dir(%s) opening...\n",dirname);
     dir = opendir(dirname);
@@ -113,33 +110,21 @@ static int scan_dir(const char *dirname, int print_flags)
 	}
 
         strcpy(filename, de->d_name);
-        printf("device(%s) (%d)opening...\n",devname,print_flags);
-        open_device(devname, print_flags);
+        printf("device(%s) opening...\n",devname);
+        open_device(devname);
     }
     closedir(dir);
     printf("dir(%s) closed\n",dirname);
 
-    printf("scan_dir end %s,%d\n",dirname,print_flags);
+    printf("scan_dir end %s\n",dirname);
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    int c;
-    int i;
     int res;
     int pollres;
-    int get_time = 0;
-    int print_device = 0;
-    char *newline = "\n";
     struct input_event event;
-    int version;
-    int print_flags = PRINT_DEVICE_ERRORS | PRINT_DEVICE | PRINT_DEVICE_NAME;
-    int print_flags_set = 0;
-    int dont_block = -1;
-    int event_count = 0;
-    int sync_rate = 0;
-    int64_t last_sync_time = 0;
     const char *device = NULL;
     const char *device_path = "/dev/input";
 
@@ -149,14 +134,13 @@ int main(int argc, char *argv[])
     ufds[0].events = POLLIN;
 
     printf("device is NULL, add watch %s\n",device_path);
-    print_device = 1;
     res = inotify_add_watch(ufds[0].fd, device_path, IN_DELETE | IN_CREATE);
     if(res < 0) {
         fprintf(stderr, "could not add watch for %s, %s\n", device_path, strerror(errno));
         return 1;
     }
     printf("scanning dir %s\n",device_path);
-    res = scan_dir(device_path, print_flags);
+    res = scan_dir(device_path);
     if(res < 0) {
         fprintf(stderr, "scan dir failed for %s\n", device_path);
         return 1;
@@ -166,7 +150,7 @@ int main(int argc, char *argv[])
     while(1) {
         pollres = poll(ufds, nfds, -1);
         printf("poll %d, returned %d\n", nfds, pollres);
-        for(i = 1; i < nfds; i++) {
+        for(int i = 1; i < nfds; i++) {
             if(ufds[i].revents) {
                 if(ufds[i].revents & POLLIN) {
 		    printf("\tufds[%d].revents=%d, POLLIN ",i,ufds[i].revents);
