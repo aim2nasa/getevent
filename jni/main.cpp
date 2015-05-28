@@ -31,10 +31,6 @@ static int open_device(const char *device, int print_flags)
     int fd;
     struct pollfd *new_ufds;
     char **new_device_names;
-    char name[80];
-    char location[80];
-    char idstr[80];
-    struct input_id id;
 
     fd = open(device, O_RDWR);
     if(fd < 0) {
@@ -64,9 +60,7 @@ static int open_device(const char *device, int print_flags)
     ufds[nfds].events = POLLIN;
     device_names[nfds] = strdup(device);
     nfds++;
-    printf("nfds:%d fd:%d \n",nfds,fd);
-
-    printf("open_device end %s,%d\n",device,print_flags);
+    printf("open_device end nfds:%d fd:%d device:%s\n",nfds,fd,device);
     return 0;
 }
 
