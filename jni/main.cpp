@@ -15,15 +15,6 @@ static struct pollfd *ufds;
 static char **device_names;
 static int nfds;
 
-enum {
-    PRINT_DEVICE_ERRORS     = 1U << 0,
-    PRINT_DEVICE            = 1U << 1,
-    PRINT_DEVICE_NAME       = 1U << 2,
-    PRINT_DEVICE_INFO       = 1U << 3,
-    PRINT_VERSION           = 1U << 4,
-    PRINT_POSSIBLE_EVENTS   = 1U << 5,
-};
-
 static int open_device(const char *device)
 {
     printf("open_device start %s\n",device);
@@ -165,6 +156,5 @@ int main(int argc, char *argv[])
             }
         }
     }
-
     return 0;
 }
