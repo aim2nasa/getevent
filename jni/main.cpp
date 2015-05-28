@@ -84,48 +84,6 @@ int close_device(const char *device, int print_flags)
     return -1;
 }
 
-static int read_notify(const char *dirname, int nfd, int print_flags)
-{
-    int res;
-    char devname[PATH_MAX];
-    char *filename;
-    char event_buf[512];
-    int event_size;
-    int event_pos = 0;
-    struct inotify_event *event;
-
-    res = read(nfd, event_buf, sizeof(event_buf));
-    if(res < (int)sizeof(*event)) {
-        if(errno == EINTR)
-            return 0;
-        fprintf(stderr, "could not get event, %s\n", strerror(errno));
-        return 1;
-    }
-    //printf("got %d bytes of event information\n", res);
-
-    strcpy(devname, dirname);
-    filename = devname + strlen(devname);
-    *filename++ = '/';
-
-    while(res >= (int)sizeof(*event)) {
-        event = (struct inotify_event *)(event_buf + event_pos);
-        //printf("%d: %08x \"%s\"\n", event->wd, event->mask, event->len ? event->name : "");
-        if(event->len) {
-            strcpy(filename, event->name);
-            if(event->mask & IN_CREATE) {
-                open_device(devname, print_flags);
-            }
-            else {
-                close_device(devname, print_flags);
-            }
-        }
-        event_size = sizeof(*event) + event->len;
-        res -= event_size;
-        event_pos += event_size;
-    }
-    return 0;
-}
-
 static int scan_dir(const char *dirname, int print_flags)
 {
     char devname[PATH_MAX];
@@ -300,11 +258,6 @@ int main(int argc, char *argv[])
     while(1) {
         pollres = poll(ufds, nfds, -1);
         printf("poll %d, returned %d\n", nfds, pollres);
-        if(ufds[0].revents & POLLIN) {
-            printf("before read_notify %s ufds[0].fd:%d\n",device_path,ufds[0].fd);
-            read_notify(device_path, ufds[0].fd, print_flags);
-            printf("after read_notify %s ufds[0].fd:%d\n",device_path,ufds[0].fd);
-        }
         for(i = 1; i < nfds; i++) {
             if(ufds[i].revents) {
                 if(ufds[i].revents & POLLIN) {
