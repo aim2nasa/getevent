@@ -212,29 +212,19 @@ int main(int argc, char *argv[])
     ufds = (pollfd*)calloc(1, sizeof(ufds[0]));
     ufds[0].fd = inotify_init();
     ufds[0].events = POLLIN;
-    if(device) {
-        printf("device is %s\n",device);
-        if(!print_flags_set)
-            print_flags = PRINT_DEVICE_ERRORS;
-        res = open_device(device, print_flags);
-        if(res < 0) {
-            return 1;
-        }
+
+    printf("device is NULL, add watch %s\n",device_path);
+    print_device = 1;
+    res = inotify_add_watch(ufds[0].fd, device_path, IN_DELETE | IN_CREATE);
+    if(res < 0) {
+        fprintf(stderr, "could not add watch for %s, %s\n", device_path, strerror(errno));
+        return 1;
     }
-    else {
-        printf("device is NULL, add watch %s\n",device_path);
-        print_device = 1;
-	res = inotify_add_watch(ufds[0].fd, device_path, IN_DELETE | IN_CREATE);
-        if(res < 0) {
-            fprintf(stderr, "could not add watch for %s, %s\n", device_path, strerror(errno));
-            return 1;
-        }
-        printf("scanning dir %s\n",device_path);
-        res = scan_dir(device_path, print_flags);
-        if(res < 0) {
-            fprintf(stderr, "scan dir failed for %s\n", device_path);
-            return 1;
-        }
+    printf("scanning dir %s\n",device_path);
+    res = scan_dir(device_path, print_flags);
+    if(res < 0) {
+        fprintf(stderr, "scan dir failed for %s\n", device_path);
+        return 1;
     }
 
     if(get_switch) {
