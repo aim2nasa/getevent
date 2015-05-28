@@ -191,8 +191,6 @@ int main(int argc, char *argv[])
             exit(1);
         }
     } while (1);
-    if(dont_block == -1)
-        dont_block = 0;
 
     nfds = 1;
     ufds = (pollfd*)calloc(1, sizeof(ufds[0]));
