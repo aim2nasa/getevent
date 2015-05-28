@@ -204,10 +204,7 @@ int main(int argc, char *argv[])
         device = argv[optind];
         optind++;
     }
-    if (optind != argc) {
-        usage(argc, argv);
-        exit(1);
-    }
+
     nfds = 1;
     ufds = (pollfd*)calloc(1, sizeof(ufds[0]));
     ufds[0].fd = inotify_init();
