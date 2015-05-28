@@ -92,6 +92,8 @@ static int print_possible_events(int fd)
 
 static int open_device(const char *device, int print_flags)
 {
+    printf("open_device start %s,%d\n",device,print_flags);
+
     int version;
     int fd;
     struct pollfd *new_ufds;
@@ -107,17 +109,22 @@ static int open_device(const char *device, int print_flags)
             fprintf(stderr, "could not open %s, %s\n", device, strerror(errno));
         return -1;
     }
+    printf("%s opened\n",device);
     
     if(ioctl(fd, EVIOCGVERSION, &version)) {
         if(print_flags & PRINT_DEVICE_ERRORS)
             fprintf(stderr, "could not get driver version for %s, %s\n", device, strerror(errno));
         return -1;
     }
+    printf("EVIOCGVERSION version:%d\n",version);
+
     if(ioctl(fd, EVIOCGID, &id)) {
         if(print_flags & PRINT_DEVICE_ERRORS)
             fprintf(stderr, "could not get driver id for %s, %s\n", device, strerror(errno));
         return -1;
     }
+    printf("EVIOCGID id bustype:%d vendor:%d product:%d version:%d\n",id.bustype,id.vendor,id.product,id.version);
+
     name[sizeof(name) - 1] = '\0';
     location[sizeof(location) - 1] = '\0';
     idstr[sizeof(idstr) - 1] = '\0';
@@ -125,14 +132,20 @@ static int open_device(const char *device, int print_flags)
         //fprintf(stderr, "could not get device name for %s, %s\n", device, strerror(errno));
         name[0] = '\0';
     }
+    printf("EVIOCGNAME name:%s\n",name);
+
+
     if(ioctl(fd, EVIOCGPHYS(sizeof(location) - 1), &location) < 1) {
         //fprintf(stderr, "could not get location for %s, %s\n", device, strerror(errno));
         location[0] = '\0';
     }
+    printf("EVIOCGPHYS location:%s\n",location);
+
     if(ioctl(fd, EVIOCGUNIQ(sizeof(idstr) - 1), &idstr) < 1) {
         //fprintf(stderr, "could not get idstring for %s, %s\n", device, strerror(errno));
         idstr[0] = '\0';
     }
+    printf("EVIOCGUNIQ idstr:%s\n",idstr);
 
     new_ufds = (pollfd*)realloc(ufds, sizeof(ufds[0]) * (nfds + 1));
     if(new_ufds == NULL) {
@@ -140,39 +153,37 @@ static int open_device(const char *device, int print_flags)
         return -1;
     }
     ufds = new_ufds;
+    printf("mem alloc for ufds(sizeof(ufds[0]):%d x %d)\n",sizeof(ufds[0]),nfds+1);
+
     new_device_names = (char**)realloc(device_names, sizeof(device_names[0]) * (nfds + 1));
     if(new_device_names == NULL) {
         fprintf(stderr, "out of memory\n");
         return -1;
     }
     device_names = new_device_names;
+    printf("mem alloc for dev names(sizeof(device_names[0]):%d x %d)\n",sizeof(device_names[0]),nfds+1);
 
-    if(print_flags & PRINT_DEVICE)
-        printf("add device %d: %s\n", nfds, device);
-    if(print_flags & PRINT_DEVICE_INFO)
-        printf("  bus:      %04x\n"
+    printf("add device %d: %s\n", nfds, device);
+    printf("  bus:      %04x\n"
                "  vendor    %04x\n"
                "  product   %04x\n"
                "  version   %04x\n",
                id.bustype, id.vendor, id.product, id.version);
-    if(print_flags & PRINT_DEVICE_NAME)
-        printf("  name:     \"%s\"\n", name);
-    if(print_flags & PRINT_DEVICE_INFO)
-        printf("  location: \"%s\"\n"
+    printf("  name:     \"%s\"\n", name);
+    printf("  location: \"%s\"\n"
                "  id:       \"%s\"\n", location, idstr);
-    if(print_flags & PRINT_VERSION)
-        printf("  version:  %d.%d.%d\n",
+    printf("  version:  %d.%d.%d\n",
                version >> 16, (version >> 8) & 0xff, version & 0xff);
 
-    if(print_flags & PRINT_POSSIBLE_EVENTS) {
-        print_possible_events(fd);
-    }
+    //print_possible_events(fd);
 
     ufds[nfds].fd = fd;
     ufds[nfds].events = POLLIN;
     device_names[nfds] = strdup(device);
     nfds++;
+    printf("nfds:%d fd:%d \n",nfds,fd);
 
+    printf("open_device end %s,%d\n",device,print_flags);
     return 0;
 }
 
@@ -244,21 +255,36 @@ static int scan_dir(const char *dirname, int print_flags)
     char *filename;
     DIR *dir;
     struct dirent *de;
+
+    printf("scan_dir start %s,%d\n",dirname,print_flags);
+
+    printf("dir(%s) opening...\n",dirname);
     dir = opendir(dirname);
     if(dir == NULL)
         return -1;
+    printf("dir(%s) opened\n",dirname);
+
     strcpy(devname, dirname);
     filename = devname + strlen(devname);
     *filename++ = '/';
+
+    printf("filename=%s\n",filename);
     while((de = readdir(dir))) {
         if(de->d_name[0] == '.' &&
            (de->d_name[1] == '\0' ||
-            (de->d_name[1] == '.' && de->d_name[2] == '\0')))
+            (de->d_name[1] == '.' && de->d_name[2] == '\0'))) {
+	    printf("continue,d_name:%d,%d,%d\n",de->d_name[0],de->d_name[1],de->d_name[1],de->d_name[2]);
             continue;
+	}
+
         strcpy(filename, de->d_name);
+        printf("device(%s) (%d)opening...\n",devname,print_flags);
         open_device(devname, print_flags);
     }
     closedir(dir);
+    printf("dir(%s) closed\n",dirname);
+
+    printf("scan_dir end %s,%d\n",dirname,print_flags);
     return 0;
 }
 
@@ -408,7 +434,7 @@ int main(int argc, char *argv[])
                     }
                     if(print_device)
                         printf("%s: ", device_names[i]);
-                    printf("%04x %04x %08x", event.type, event.code, event.value);
+                    //printf("%04x %04x %08x", event.type, event.code, event.value);
                     if(sync_rate && event.type == 0 && event.code == 0) {
                         int64_t now = event.time.tv_sec * 1000000LL + event.time.tv_usec;
                         if(last_sync_time)
