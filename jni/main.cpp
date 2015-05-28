@@ -194,11 +194,6 @@ int main(int argc, char *argv[])
     if(dont_block == -1)
         dont_block = 0;
 
-    if (optind + 1 == argc) {
-        device = argv[optind];
-        optind++;
-    }
-
     nfds = 1;
     ufds = (pollfd*)calloc(1, sizeof(ufds[0]));
     ufds[0].fd = inotify_init();
@@ -231,9 +226,6 @@ int main(int argc, char *argv[])
             printf("%04x%s", sw, newline);
         }
     }
-
-    if(dont_block)
-        return 0;
 
     printf("entering while loop...\n");
     while(1) {
