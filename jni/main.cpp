@@ -132,7 +132,6 @@ int main(int argc, char *argv[])
     int get_time = 0;
     int print_device = 0;
     char *newline = "\n";
-    uint16_t get_switch = 0;
     struct input_event event;
     int version;
     int print_flags = PRINT_DEVICE_ERRORS | PRINT_DEVICE | PRINT_DEVICE_NAME;
@@ -161,20 +160,6 @@ int main(int argc, char *argv[])
     if(res < 0) {
         fprintf(stderr, "scan dir failed for %s\n", device_path);
         return 1;
-    }
-
-    if(get_switch) {
-        printf("get_switch\n",device_path);
-        for(i = 1; i < nfds; i++) {
-            uint16_t sw;
-            res = ioctl(ufds[i].fd, EVIOCGSW(1), &sw);
-            if(res < 0) {
-                fprintf(stderr, "could not get switch state, %s\n", strerror(errno));
-                return 1;
-            }
-            sw &= get_switch;
-            printf("%04x%s", sw, newline);
-        }
     }
 
     printf("entering while loop...\n");
