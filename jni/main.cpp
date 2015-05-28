@@ -93,6 +93,7 @@ static int scan_dir(const char *dirname)
 
     printf("filename=%s\n",filename);
     while((de = readdir(dir))) {
+        printf("readdir, (%s)\n",de->d_name);
         if(de->d_name[0] == '.' &&
            (de->d_name[1] == '\0' ||
             (de->d_name[1] == '.' && de->d_name[2] == '\0'))) {
