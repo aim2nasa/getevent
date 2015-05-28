@@ -169,29 +169,14 @@ int main(int argc, char *argv[])
         for(i = 1; i < nfds; i++) {
             if(ufds[i].revents) {
                 if(ufds[i].revents & POLLIN) {
-		    printf("ufds[%d].revents=%d, POLLIN\n",i,ufds[i].revents);
+		    printf("\tufds[%d].revents=%d, POLLIN ",i,ufds[i].revents);
                     res = read(ufds[i].fd, &event, sizeof(event));
                     if(res < (int)sizeof(event)) {
-                        fprintf(stderr, "could not get event\n");
+                        fprintf(stderr, ",could not get event\n");
                         return 1;
                     }
-		    printf("read %d bytes ",res);
-
-                    if(get_time) {
-                        printf("%ld-%ld: ", event.time.tv_sec, event.time.tv_usec);
-                    }
-                    if(print_device)
-                        printf("%s: ", device_names[i]);
-                    //printf("%04x %04x %08x", event.type, event.code, event.value);
-                    if(sync_rate && event.type == 0 && event.code == 0) {
-                        int64_t now = event.time.tv_sec * 1000000LL + event.time.tv_usec;
-                        if(last_sync_time)
-                            printf(" rate %lld", 1000000LL / (now - last_sync_time));
-                        last_sync_time = now;
-                    }
-                    printf("%s", newline);
-                    if(event_count && --event_count == 0)
-                        return 0;
+                    printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
+			res,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
                 }
             }
         }
