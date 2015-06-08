@@ -120,6 +120,11 @@ int main(int argc, char *argv[])
     const char *device = NULL;
     const char *device_path = "/dev/input";
 
+    if(argc<2) {
+        printf("usage:gevt <event#>\n");
+        return -1;
+    }
+
     nfds = 1;
     ufds = (pollfd*)calloc(1, sizeof(ufds[0]));
     ufds[0].fd = inotify_init();
