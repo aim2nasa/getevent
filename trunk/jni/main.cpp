@@ -147,11 +147,11 @@ int main(int argc, char *argv[])
     printf("entering while loop...\n");
     while(1) {
         pollres = poll(ufds, nfds, -1);
-        printf("poll %d, returned %d\n", nfds, pollres);
+        //printf("poll %d, returned %d\n", nfds, pollres);
         for(int i = 1; i < nfds; i++) {
             if(ufds[i].revents) {
                 if(ufds[i].revents & POLLIN) {
-		    printf("\tufds[%d].revents=%d, POLLIN ",i,ufds[i].revents);
+		    //printf("\tufds[%d].revents=%d, POLLIN ",i,ufds[i].revents);
                     res = read(ufds[i].fd, &event, sizeof(event));
                     if(res < (int)sizeof(event)) {
                         fprintf(stderr, ",could not get event\n");
