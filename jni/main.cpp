@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    char selected[PATH_MAX];
     printf("entering while loop...\n");
     while(1) {
         pollres = poll(ufds, nfds, -1);
@@ -156,6 +157,8 @@ int main(int argc, char *argv[])
                         fprintf(stderr, ",could not get event\n");
                         return 1;
                     }
+                    sprintf(selected,"/dev/input/event%d",atoi(argv[1]));
+                    if(strcmp(device_names[i],selected) != 0) continue; 
                     printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
 			res,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
                 }
