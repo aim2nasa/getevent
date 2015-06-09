@@ -166,13 +166,13 @@ int main(int argc, char *argv[])
                     sprintf(selected,"/dev/input/event%d",atoi(argv[1]));
                     if(strcmp(device_names[i],selected) != 0) continue; 
 
-                    printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
-			res,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
                     int nWritten = write(fd,&event,sizeof(event));
                     if(nWritten!=sizeof(event)){
                         fprintf(stderr, "write error(%dbytes)\n",nWritten);
                         return -1;
                     }
+                    printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
+			nWritten,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
 
                     //ABS_MT_TRACKING_ID 0x39
                     if(event.type==EV_ABS && event.code==0x39){
