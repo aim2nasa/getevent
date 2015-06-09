@@ -143,6 +143,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    int fd = open("/data/local/tmp/event.bin", O_CREAT|O_WRONLY);
+    printf("open:%d\n",fd);
+
     char selected[PATH_MAX];
     printf("entering while loop...\n");
     while(1) {
@@ -161,9 +164,12 @@ int main(int argc, char *argv[])
                     if(strcmp(device_names[i],selected) != 0) continue; 
                     printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
 			res,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
+                    int nWritten = write(fd,&event,sizeof(event));
+                    printf("written:%d\n",nWritten);
                 }
             }
         }
     }
+    close(fd);
     return 0;
 }
