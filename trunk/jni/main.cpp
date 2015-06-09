@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
     const char *device_path = "/dev/input";
 
     if(argc<3) {
-        printf("usage:gevt <event#> <dump file name>\n");
+        printf("usage:ge <event#> <dump file name>\n");
         return -1;
     }
 
