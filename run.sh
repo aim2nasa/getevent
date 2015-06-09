@@ -1,1 +1,1 @@
-adb shell "/data/local/tmp/gevt 1"
+adb shell "/data/local/tmp/ge 1"
