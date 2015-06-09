@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int evtGroup = 0;
+    int evtGroup = 0,mtTrack=0;
     char evtGroupName[PATH_MAX];
     sprintf(evtGroupName,"%s-%d.bin",argv[2],evtGroup);
     int fd = open(evtGroupName, O_CREAT|O_WRONLY,0644);
@@ -165,10 +165,22 @@ int main(int argc, char *argv[])
                     }
                     sprintf(selected,"/dev/input/event%d",atoi(argv[1]));
                     if(strcmp(device_names[i],selected) != 0) continue; 
+
                     printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
 			res,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
                     int nWritten = write(fd,&event,sizeof(event));
                     printf("written:%d\n",nWritten);
+
+                    //ABS_MT_TRACKING_ID 0x39
+                    if(event.type==EV_ABS && event.code==0x39){
+                        if(event.value!=0xffffffff) {
+                            mtTrack++;
+                            printf("MT Tracking(%d) started(%d)\n",mtTrack,event.value);
+                        }else{
+                            mtTrack--;
+                            printf("MT Tracking(%d) ended(%d)\n",mtTrack,event.value);
+                        }
+                    }
                 }
             }
         }
