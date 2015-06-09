@@ -148,7 +148,11 @@ int main(int argc, char *argv[])
     char evtGroupName[PATH_MAX];
     sprintf(evtGroupName,"%s-%d.bin",argv[2],evtGroup);
     int fd = open(evtGroupName, O_CREAT|O_WRONLY,0644);
-    printf("open:%d\n",fd);
+    if(fd < 0) {
+        fprintf(stderr, "could not open %s, %s\n",evtGroupName,strerror(errno));
+        return -1;
+    } 
+    printf("%s file opened\n",evtGroupName);
 
     char selected[PATH_MAX];
     printf("entering while loop...\n");
@@ -190,9 +194,17 @@ int main(int argc, char *argv[])
 
                     //SYN_REPORT 0x0
                     if(event.type==EV_SYN && event.code==0x0 && isLastMt==true){
+                        close(fd);
                         printf("End of event group(events:%d)\n",evtCount);
                         evtCount = 0;
                         isLastMt = false;
+                        sprintf(evtGroupName,"%s-%d.bin",argv[2],++evtGroup);
+                        fd = open(evtGroupName, O_CREAT|O_WRONLY,0644);
+                        if(fd < 0) {
+                            fprintf(stderr, "could not open %s, %s\n",evtGroupName,strerror(errno));
+                            return -1;
+                        }
+                        printf("%s file opened\n",evtGroupName);
                     }
                 }
             }
