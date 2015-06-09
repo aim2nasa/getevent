@@ -169,7 +169,10 @@ int main(int argc, char *argv[])
                     printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
 			res,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
                     int nWritten = write(fd,&event,sizeof(event));
-                    printf("written:%d\n",nWritten);
+                    if(nWritten!=sizeof(event)){
+                        fprintf(stderr, "write error(%dbytes)\n",nWritten);
+                        return -1;
+                    }
 
                     //ABS_MT_TRACKING_ID 0x39
                     if(event.type==EV_ABS && event.code==0x39){
