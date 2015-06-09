@@ -143,7 +143,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int evtGroup = 0,mtTrack=0;
+    int evtGroup = 0,mtTrack=0,evtCount=0;
+    bool isLastMt = false;
     char evtGroupName[PATH_MAX];
     sprintf(evtGroupName,"%s-%d.bin",argv[2],evtGroup);
     int fd = open(evtGroupName, O_CREAT|O_WRONLY,0644);
@@ -171,6 +172,7 @@ int main(int argc, char *argv[])
                         fprintf(stderr, "write error(%dbytes)\n",nWritten);
                         return -1;
                     }
+                    evtCount++;
                     printf("%d bytes %ld-%ld: %s %04x %04x %08x\n",
 			nWritten,event.time.tv_sec, event.time.tv_usec,device_names[i],event.type, event.code, event.value);
 
@@ -181,8 +183,16 @@ int main(int argc, char *argv[])
                             printf("MT Tracking(%d) started(%d)\n",mtTrack,event.value);
                         }else{
                             mtTrack--;
+                            if(mtTrack==0) isLastMt = true;
                             printf("MT Tracking(%d) ended(%d)\n",mtTrack,event.value);
                         }
+                    }
+
+                    //SYN_REPORT 0x0
+                    if(event.type==EV_SYN && event.code==0x0 && isLastMt==true){
+                        printf("End of event group(events:%d)\n",evtCount);
+                        evtCount = 0;
+                        isLastMt = false;
                     }
                 }
             }
