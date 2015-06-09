@@ -1,1 +1,1 @@
-adb push libs/armeabi/gevt /data/local/tmp
+adb push libs/armeabi/ge /data/local/tmp
