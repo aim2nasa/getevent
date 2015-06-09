@@ -120,8 +120,8 @@ int main(int argc, char *argv[])
     const char *device = NULL;
     const char *device_path = "/dev/input";
 
-    if(argc<2) {
-        printf("usage:gevt <event#>\n");
+    if(argc<3) {
+        printf("usage:gevt <event#> <dump file name>\n");
         return -1;
     }
 
@@ -143,7 +143,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int fd = open("/data/local/tmp/event.bin", O_CREAT|O_WRONLY);
+    int evtGroup = 0;
+    char evtGroupName[PATH_MAX];
+    sprintf(evtGroupName,"%s-%d.bin",argv[2],evtGroup);
+    int fd = open(evtGroupName, O_CREAT|O_WRONLY,0644);
     printf("open:%d\n",fd);
 
     char selected[PATH_MAX];
